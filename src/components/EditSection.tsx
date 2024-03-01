@@ -4,44 +4,58 @@ import { Task, TaskBody } from '../commonTypes';
 import { colors } from '../colors';
 import { formatDate } from '../formatDate';
 
-interface AddSectionInterface {
-    open: boolean;
+interface EditSectionInterface {
+    taskToEdit: Task;
     onComplete: (taskBody: TaskBody) => void;
+    onDelete: (id: string) => void;
     onClose: () => void;
-}
+    }
 
-export const AddSection: React.FC<AddSectionInterface> = ({
-    open,
-    onComplete,
-    onClose,
-}) => {
-    const [taskName, setTaskName] = React.useState('');  
-    const now = new Date();
-    const initialDate = formatDate(now.toISOString());
-    const [taskDeadline, setTaskDeadline] = React.useState(initialDate);
+    export const EditSection: React.FC<EditSectionInterface> = ({
+        taskToEdit,
+        onComplete,
+        onDelete,
+        onClose,
+        }) => {
+            
+    const [taskName, setTaskName] = React.useState(taskToEdit.name);  
+    const [taskDeadline, setTaskDeadline] = React.useState(
+        formatDate(taskToEdit.deadline)
+    );
 
-function addTask() {
+function editTask() {
     const taskBody: TaskBody = {
         name: taskName,
         deadline: new Date(taskDeadline).toISOString(),
         completed: false,
         };
         onComplete(taskBody);
-        onClose();
-        
+        onClose();        
     }
- 
+function deleteTask() {
+        onDelete(taskToEdit.id);
+        onClose();
+    }
+    
+    React.useEffect(
+        function () {
+            setTaskName(taskToEdit.name);
+            setTaskDeadline(formatDate(taskToEdit.deadline));
+        },
+        [taskToEdit]
+    );
+            
     
     return (
-        <Container open={open}>
+        <Container open={true}>
             <Content>
             <Header>
-              Добавить новую задачу
+              Изменить задачу
               <CloseButton onClick={onClose}>⨯</CloseButton>
-
-            </Header>
+                </Header>
             <Label>Название задачи:</Label>
-            <Field type='text' 
+            <Field 
+            type='text' 
             value={taskName} 
             onChange={(event) => {
                 const newValue = event.currentTarget.value;
@@ -60,7 +74,8 @@ function addTask() {
                 }}  
                 />
             <ButtonsSection>
-              <ConfirmButton disabled={taskName === ''} onClick={addTask}>
+              <DeleteButton onClick={deleteTask}>Удалить</DeleteButton>
+              <ConfirmButton disabled={taskName === ''} onClick={editTask}>
                  Сохранить
             </ConfirmButton>
             </ButtonsSection>
@@ -174,6 +189,34 @@ const Header = styled.div({
         
         '&:active': {
         backgroundColor: colors.buttonActive.positive,
+        },
+    });
+
+    const DeleteButton = styled.button({
+        width: 110,
+        height: 38,
+        paddingTop: 4,
+        paddingBottom: 4,
+        marginLeft: 24,
+        
+        border: '1px solid lightgray',
+        borderRadius: 4,
+        backgroundColor: colors.button.negative,
+        
+        color: colors.lightText,
+        fontSize: '16px',
+        fontWeight: 700,
+        lineHeight: '20px',
+        
+        cursor: 'pointer',
+        userSelect: 'none',
+        
+        '&:hover': {
+        backgroundColor: colors.buttonHover.negative,
+        },
+        
+        '&:active': {
+        backgroundColor: colors.buttonActive.negative,
         },
     });
         
