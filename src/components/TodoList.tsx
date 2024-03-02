@@ -14,6 +14,18 @@ export const ToDoList: React.FC = () => {
     const [addSectionOpen, setAddSectionOpen] = React.useState(false);
     const [taskToEdit, setTaskToEdit] = React.useState<Task | undefined>();
 
+    const BASE_URL = process.env.REACT_APP_BASE_URL;
+
+    React.useEffect(function () {
+        fetch(`${BASE_URL}/tasks/`)
+         .then(function (response) {
+          return response.json();
+        })
+         .then(function (data: Task[]) {
+          setCurrentTasks(data);
+        });
+        }, []);
+   
     function openAddTaskSection() {
             setAddSectionOpen(true);
         }
@@ -23,45 +35,42 @@ export const ToDoList: React.FC = () => {
         }
 
         function markTask(id: string, completed: boolean) {
-            const taskToChange = currentTasks.find(function (task) {
-                if (task.id === id) {
-                    return true;
-                } else {
-                return false;
-                }
-            });
+           const taskBody: Partial<TaskBody> = {
+            completed: completed,
+           };
 
-            if (taskToChange === undefined) {
-                return;
+           fetch(`${BASE_URL}/tasks/${id}`, {
+            method: 'PUT',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(taskBody),
+         })
+            .then(function (response) {
+             return response.json();
+            })
+            .then(function (data: Task[]) {
+            setCurrentTasks(data);
+            });
             }
 
-            const newTask: Task = {
-                id: taskToChange.id,
-                name: taskToChange.name,
-                completed: completed,
-                deadline: taskToChange.deadline,
-            };
-
-            const taskToChangeIndex = currentTasks.indexOf(taskToChange);
-
-            const newTasks = currentTasks.slice();
-            newTasks.splice(taskToChangeIndex, 1, newTask);
-
-            setCurrentTasks(newTasks);
-        }
-
         function addTask(taskBody: TaskBody) {
-            const newTask: Task = {
-                id: Date.now().toString(),
-                name: taskBody.name,
-                completed: taskBody.completed,
-                deadline: taskBody.deadline,
-            };
-
-            const newTasks = currentTasks.slice();
-            newTasks.push(newTask);
-            setCurrentTasks(newTasks);
-        }
+            fetch(`${BASE_URL}/tasks/`, {
+                method: 'POST',
+                headers: {
+                  Accept: 'application/json',
+                    'Content-Type': 'application/json',
+            },
+                body: JSON.stringify(taskBody),
+            })
+            .then(function (response) {
+               return response.json();
+            })
+            .then(function (data: Task[]) {
+            setCurrentTasks(data);
+            });
+            }
 
         function openEditTaskSection(id: string) {
             const taskToChange = currentTasks.find(function (task) {
@@ -79,42 +88,34 @@ export const ToDoList: React.FC = () => {
             return;
         }
         
-        const taskToChange = currentTasks.find(function (task) {
-            if (task.id === taskToEdit.id) {
-                return true;
-        } else {
-            return false;
-        }
-    });
+        fetch(`${BASE_URL}/tasks/${taskToEdit.id}`, {
+            method: 'PUT',
+            headers: {
+                 Accept: 'application/json',
+             'Content-Type': 'application/json',
+        },
+            body: JSON.stringify(taskBody),
+       })
+            .then(function (response) {
+              return response.json();
+            })
+            .then(function (data: Task[]) {
+              setCurrentTasks(data);
+            });
         
-    if (taskToChange === undefined) {
-        return;
-    }
-    
-    const newTask: Task = {
-        id: taskToChange.id,
-        name: taskBody.name,
-        completed: taskBody.completed,
-        deadline: taskBody.deadline,
-    };
-        const taskToChangeIndex = currentTasks.indexOf(taskToChange);
-        
-        const newTasks = currentTasks.slice();
-        newTasks.splice(taskToChangeIndex, 1, newTask);
-        
-        setCurrentTasks(newTasks);
     }
 
     function deleteTask(id: string) {
-        const newTasks = currentTasks.filter(function (task) {
-            if (task.id !== id) {
-                return true;
-            } else {
-                return false;
-            }
-            });
-            setCurrentTasks(newTasks);
-        }
+        fetch(`${BASE_URL}/tasks/${id}`, {
+            method: 'DELETE',
+        })
+            .then(function (response) {
+              return response.json();
+        })
+            .then(function (data: Task[]) {
+            setCurrentTasks(data);
+        });
+     }
         
     function closeEditTaskSection() {
         setTaskToEdit(undefined);
